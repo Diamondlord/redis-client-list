@@ -2,6 +2,7 @@
 
 const yargs = require('yargs/yargs');
 const Redis = require('ioredis');
+const util = require('util');
 
 // Parse args
 const argv = yargs(process.argv.slice(2))
@@ -13,6 +14,8 @@ const argv = yargs(process.argv.slice(2))
   .alias('p', 'port')
   .default('p', 6379)
   .argv;
+
+console.log(`Connecting to host ${argv.host} and port ${argv.port}`);
 
 const redis = new Redis({
   host: argv.host, // Redis host
@@ -34,7 +37,7 @@ TYPES.forEach(type => {
 async function getClients(type = 'normal') {
   const result = await redis['client']('list', 'type', type);
   const uniqueIps = parseIps(result);
-  console.log(type, uniqueIps);
+  console.log(type, util.inspect(uniqueIps, { maxArrayLength: null }))
 }
 
 function parseIps(result) {
