@@ -21,11 +21,14 @@ const redis = new Redis({
 
 const TYPES = ['normal', 'pubsub', 'master', 'replica'];
 
+const promises = [];
+
 TYPES.forEach(type => {
-  getClients(type)
+  const promise = getClients(type)
     .catch(err => {
       console.log('err:', err);
     });
+  promises.push(promise);
 })
 
 async function getClients(type = 'normal') {
@@ -45,3 +48,8 @@ function parseIps(result) {
   const uniqueIps = [... new Set(ips)];
   return uniqueIps;
 }
+
+Promise.all(promises)
+  .then( () => {
+      redis.quit();
+    });
