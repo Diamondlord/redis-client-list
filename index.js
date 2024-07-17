@@ -22,26 +22,29 @@ const redis = new Redis({
   port: argv.port, // Redis port
 });
 
-const TYPES = ['normal', 'pubsub', 'master', 'replica'];
+const TYPES = ['normal', 'pubsub', 'master'];
 
 const promises = [];
 
 TYPES.forEach(type => {
   const promise = getClients(type)
     .catch(err => {
-      console.log('err:', err);
+      console.log('catch err:', err);
     });
   promises.push(promise);
 })
 
 async function getClients(type = 'normal') {
   const result = await redis['client']('list', 'type', type);
-  const uniqueIps = parseIps(result);
-  console.log(type, util.inspect(uniqueIps, { maxArrayLength: null }))
+  const connectionList = result.split('\n').filter(con => con);
+  const uniqueIps = parseIps(connectionList);
+  const multiCommandsCount = parseMulti(connectionList);
+  console.log(type, util.inspect(uniqueIps, { maxArrayLength: null }));
+  console.log('multi commands executed', multiCommandsCount);
 }
 
-function parseIps(result) {
-  const connectionList = result.split('\n').filter(con => con);
+function parseIps(connectionList) {
+
 
   const ips = connectionList.map(con => {
     const address = con.split(' ')[1];
@@ -50,6 +53,21 @@ function parseIps(result) {
   });
   const uniqueIps = [... new Set(ips)];
   return uniqueIps;
+}
+
+function parseMulti(connectionList) {
+  const multiCommandsPerConnection = connectionList.map(con => {
+    const multi = con.split(' ')[11];
+    const multiCount = multi.split('=')[1];
+    return multiCount;
+  });
+  const multiCommandsCount = multiCommandsPerConnection.reduce((sum, current) => {
+    if (current > -1) {
+      return sum + current;
+    };
+    return sum;
+  }, 0)
+  return multiCommandsCount;
 }
 
 Promise.all(promises)
