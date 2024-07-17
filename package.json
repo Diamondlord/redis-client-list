@@ -14,12 +14,14 @@
   "author": "Diamondlord",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Diamondlord/redis-client-list.git"
+    "url": "git+ssh://git@github.com/Diamondlord/redis-client-list.git"
   },
   "license": "ISC",
   "dependencies": {
     "ioredis": "5.4.1",
     "yargs": "17.7.2"
   },
-  "bin": "./index.js"
+  "bin": {
+    "redis-client-list": "index.js"
+  }
 }
